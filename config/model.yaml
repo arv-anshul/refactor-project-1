@@ -1,0 +1,42 @@
+#we can give info of any number of algorithm we want as per our case 
+#models passed with hyperparameters inside it by refering documentation 
+
+grid_search:
+  class: GridSearchCV
+  module: sklearn.model_selection
+  params:
+    cv: 5
+    verbose: 3
+
+model_selection:
+  module_0:
+    class: RandomForestClassifier
+    module: sklearn.ensemble
+    params: 
+      n_estimators:
+        - 50
+    search_param_grid:
+      n_estimators: 
+        - 50 # Test different numbers of trees
+      max_depth: 
+        - 10 # Test different maximum tree depths
+      min_samples_split: 
+        - 2  # Test different minimum samples for split
+        
+
+  module_1:
+    class: DecisionTreeClassifier
+    module: sklearn.tree
+    params:
+      random_state: 0 
+    search_param_grid:
+      criterion: 
+        - entropy
+      max_depth:
+        - 10
+      min_samples_split:
+        - 5
+      max_features:
+        - 7
+
+  
