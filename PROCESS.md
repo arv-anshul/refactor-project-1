@@ -14,4 +14,5 @@
 ### Step 1.1 - Exception and Logging
 
 - [x] Refactor **exceptions**.
-- [ ] Refactor **logging**.
+- [x] Refactor **logging**.
+  > I don't know what to do about it. **I didn't do anything.**
