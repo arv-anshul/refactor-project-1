@@ -1,6 +1,5 @@
 numpy
 flask
-gunicorn
 scikit-learn
 pandas
 PyYAML
@@ -8,7 +7,4 @@ evidently
 dill
 matplotlib
 numba
-xlrd
 imblearn
-ipython
-# -e .
