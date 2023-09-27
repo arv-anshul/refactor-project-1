@@ -13,5 +13,5 @@
 
 ### Step 1.1 - Exception and Logging
 
-- [ ] Refactor **exceptions**.
+- [x] Refactor **exceptions**.
 - [ ] Refactor **logging**.

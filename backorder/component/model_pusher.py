@@ -1,10 +1,10 @@
 import os
 import shutil
-import sys
+from sys import exc_info
 
 from backorder.entity.artifact_entity import ModelEvaluationArtifact, ModelPusherArtifact
 from backorder.entity.config_entity import ModelPusherConfig
-from backorder.exception import backorderException
+from backorder.exception import BackorderException
 from backorder.logger import logging
 
 
@@ -20,7 +20,7 @@ class ModelPusher:
             self.model_evaluation_artifact = model_evaluation_artifact
 
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def export_model(self) -> ModelPusherArtifact:
         try:
@@ -48,13 +48,13 @@ class ModelPusher:
             logging.info(f"Model pusher artifact: [{model_pusher_artifact}]")
             return model_pusher_artifact
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def initiate_model_pusher(self) -> ModelPusherArtifact:
         try:
             return self.export_model()
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def __del__(self):
         logging.info(f"{'>>' * 20}Model Pusher log completed.{'<<' * 20} ")

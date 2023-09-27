@@ -1,13 +1,13 @@
 import json
 import os
-import sys
+from sys import exc_info
 
 import pandas as pd
 
 from backorder.constant import *
 from backorder.entity.artifact_entity import DataIngestionArtifact, DataValidationArtifact
 from backorder.entity.config_entity import DataValidationConfig
-from backorder.exception import backorderException
+from backorder.exception import BackorderException
 from backorder.logger import logging
 from backorder.util.util import read_yaml_file
 
@@ -37,7 +37,7 @@ class DataValidation:
             self.data_validation_config = data_validation_config
             self.data_ingestion_artifact = data_ingestion_artifact
         except Exception as e:
-            raise backorderException (e,sys) from e
+            raise backorderException (e,exc_info()) from e
 
 #required functions to complete validation process are as:
     def get_train_and_test_df(self):
@@ -46,7 +46,7 @@ class DataValidation:
             test_df = pd.read_csv(self.data_ingestion_artifact.test_file_path)
             return train_df,test_df
         except Exception as e:
-            raise backorderException (e,sys) from e
+            raise backorderException (e,exc_info()) from e
 
 
     def is_train_test_file_exists(self)->bool:
@@ -74,7 +74,7 @@ class DataValidation:
 
             return is_available
         except Exception as e:
-            raise backorderException (e,sys) from e
+            raise backorderException (e,exc_info()) from e
 
 
     def validate_dataset_schema(self)->bool:
@@ -100,7 +100,7 @@ class DataValidation:
                 raise Exception(f"Schema validation not successful")
             return is_schema_validation_successful
         except Exception as e:
-            raise backorderException(e,sys) from e
+            raise backorderException(e,exc_info()) from e
 
     def get_and_save_data_drift_report(self):
         try:
@@ -120,7 +120,7 @@ class DataValidation:
                 json.dump(report, report_file, indent=6)
             return report
         except Exception as e:
-            raise backorderException (e,sys) from e
+            raise backorderException (e,exc_info()) from e
 
     def save_data_drift_report_page(self):
         try:
@@ -134,7 +134,7 @@ class DataValidation:
 
             dashboard.save(report_page_file_path)
         except Exception as e:
-            raise backorderException (e,sys) from e
+            raise backorderException (e,exc_info()) from e
 
     def is_data_drift_found(self)->bool:
         try:
@@ -142,7 +142,7 @@ class DataValidation:
             self.save_data_drift_report_page()
             return True
         except Exception as e:
-            raise backorderException (e,sys) from e
+            raise backorderException (e,exc_info()) from e
 
     def initiate_data_validation(self)->DataValidationArtifact :
         try:
@@ -160,7 +160,7 @@ class DataValidation:
             logging.info(f"Data validation artifact: {data_validation_artifact}")
             return data_validation_artifact
         except Exception as e:
-            raise backorderException (e,sys) from e
+            raise backorderException (e,exc_info()) from e
 
 
     def __del__(self):
@@ -179,7 +179,7 @@ class DataValidation:
             self.data_validation_config = data_validation_config
             self.data_ingestion_artifact = data_ingestion_artifact
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def get_train_test_dataframe(self):
         try:
@@ -189,7 +189,7 @@ class DataValidation:
             logging.info(f"conversion to dataframe successful")
             return train_df, test_df
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def is_old_new_raw_dataset_datadrift_found(self, number_of_n_runs_old: int) -> bool:
         try:
@@ -253,7 +253,7 @@ class DataValidation:
                 print("Old period for Data drift check is None or Zero")
                 return is_data_drift_found
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def is_train_test_file_exists(self) -> bool:
         try:
@@ -281,7 +281,7 @@ class DataValidation:
             else:
                 return is_available
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def validate_dataset_schema(self) -> bool:
         try:
@@ -318,7 +318,7 @@ class DataValidation:
                 logging.error(f"Schema validation not successful")
                 return is_schema_validation_successful
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def is_data_drift_found(self) -> bool:
         try:
@@ -334,7 +334,7 @@ class DataValidation:
                 logging.info(f"Data drift found in train and test dataset")
             return is_data_drift_found
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def save_data_drift_report(self):
         try:
@@ -353,7 +353,7 @@ class DataValidation:
             )
             return report
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def save_data_drift_report_old_data_check(self):
         try:
@@ -374,7 +374,7 @@ class DataValidation:
             )
             return report
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def save_data_drift_report_page(self):
         try:
@@ -385,7 +385,7 @@ class DataValidation:
             drift_report.save_html(self.data_validation_config.report_page_file_path)
             logging.info("Successful : Checking data drift and genrating html reports")
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def initiate_data_validation(self) -> DataValidationArtifact:
         try:
@@ -410,7 +410,7 @@ class DataValidation:
             logging.info(f"Data Validation artifact : {data_validation_artifact}")
             return data_validation_artifact
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def __del__(self):
         logging.info(f"{'>>'*20} Data Validation log completed.{'<<'*20} \n\n")

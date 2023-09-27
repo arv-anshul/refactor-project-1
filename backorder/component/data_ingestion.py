@@ -1,7 +1,7 @@
 import gzip
 import os
-import sys
 import warnings
+from sys import exc_info
 
 import pandas as pd
 from numba.core.errors import NumbaDeprecationWarning, NumbaPendingDeprecationWarning
@@ -10,7 +10,7 @@ from sklearn.model_selection import StratifiedShuffleSplit
 
 from backorder.entity.artifact_entity import DataIngestionArtifact
 from backorder.entity.config_entity import DataIngestionConfig
-from backorder.exception import backorderException
+from backorder.exception import BackorderException
 from backorder.logger import logging
 
 warnings.simplefilter("ignore", category=NumbaDeprecationWarning)
@@ -27,7 +27,7 @@ class DataIngestion:
             self.data_ingestion_config = data_ingestion_config
 
         except Exception as e:
-            raise backorderException(e, sys)
+            raise BackorderException(e, exc_info())
 
     def download_backorder_data(
         self,
@@ -62,7 +62,7 @@ class DataIngestion:
             return tgz_file_path
 
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     """
     def download_backorder_data(self) -> str:
@@ -90,12 +90,12 @@ class DataIngestion:
                     f.write(response.content)
                 logging.info(f"File: [{tgz_file_path}] has been downloaded successfully.")
             else:
-                raise backorderException(f"Failed to download the file. Status code: {response.status_code}", sys)
+                raise backorderException(f"Failed to download the file. Status code: {response.status_code}", exc_info())
 
             return tgz_file_path
 
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise backorderException(e, exc_info()) from e
     
     def extract_tgz_file(self,tgz_file_path:str):
         try:
@@ -127,7 +127,7 @@ class DataIngestion:
             logging.info(f"Extraction completed")
 
         except Exception as e:
-            raise backorderException(e,sys) from e
+            raise backorderException(e,exc_info()) from e
     """
 
     def extract_tgz_file(self, tgz_file_path: str):
@@ -151,7 +151,7 @@ class DataIngestion:
                 logging.error(f"The tgz_file_path: [{tgz_file_path}] does not exist.")
 
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     """
     def extract_tgz_file(self, tgz_file_path: str):
@@ -186,7 +186,7 @@ class DataIngestion:
             logging.info("Extraction completed")
 
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise backorderException(e, exc_info()) from e
     """
     """      
     def extract_tgz_file(self, tgz_file_path: str):
@@ -214,7 +214,7 @@ class DataIngestion:
             logging.info("Extraction completed")
 
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise backorderException(e, exc_info()) from e
     """
 
     def split_data_as_train_test(self) -> DataIngestionArtifact:
@@ -223,7 +223,7 @@ class DataIngestion:
             file_list = os.listdir(raw_data_dir)
 
             # if not file_list:
-            # raise backorderException("The raw_data_dir is empty. No files found in the directory.", sys)
+            # raise backorderException("The raw_data_dir is empty. No files found in the directory.", exc_info())
             # file_name = os.listdir(raw_data_dir)[0]
             file_name = file_list[0]  # accesing file name from raw data ,[0] gives file name
 
@@ -275,7 +275,7 @@ class DataIngestion:
             return data_ingestion_artifact
 
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def initiate_data_ingestion(self) -> DataIngestionArtifact:
         try:
@@ -283,7 +283,7 @@ class DataIngestion:
             self.extract_tgz_file(tgz_file_path=tgz_file_path)
             return self.split_data_as_train_test()
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def __del__(self):
         logging.info(f"{'>>'*20}Data Ingestion log completed.{'<<'*20} \n\n")

@@ -1,8 +1,8 @@
 import os
-import sys
 import uuid
 from collections import namedtuple
 from datetime import datetime
+from sys import exc_info
 from threading import Thread
 
 import pandas as pd
@@ -23,7 +23,7 @@ from backorder.entity.artifact_entity import (
     ModelPusherArtifact,
     ModelTrainerArtifact,
 )
-from backorder.exception import backorderException
+from backorder.exception import BackorderException
 from backorder.logger import logging
 
 Experiment = namedtuple(
@@ -44,13 +44,8 @@ Experiment = namedtuple(
 )
 
 
-# running status so that when try to execute new training it will show pipeline already running and wait till that pipeline execute
-
-
 class Pipeline(Thread):
-    experiment: Experiment = Experiment(
-        *([None] * 11)
-    )  # all attribute in experiment initializing with none
+    experiment: Experiment = Experiment(*([None] * 11))
     experiment_file_path = None
 
     def __init__(self, config: Configuartion) -> None:
@@ -60,20 +55,20 @@ class Pipeline(Thread):
                 config.training_pipeline_config.artifact_dir,
                 EXPERIMENT_DIR_NAME,
                 EXPERIMENT_FILE_NAME,
-            )  # storing pipeline execution (when it completed)in csv file format
+            )
             super().__init__(daemon=False, name="pipeline")
             self.config = config
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def start_data_ingestion(self) -> DataIngestionArtifact:
-        try:  # component and configuration.py for data ingestion given here
+        try:
             data_ingestion = DataIngestion(
                 data_ingestion_config=self.config.get_data_ingestion_config()
             )
             return data_ingestion.initiate_data_ingestion()
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def start_data_validation(
         self, data_ingestion_artifact: DataIngestionArtifact
@@ -85,7 +80,7 @@ class Pipeline(Thread):
             )
             return data_validation.initiate_data_validation()
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def start_data_transformation(
         self,
@@ -100,7 +95,7 @@ class Pipeline(Thread):
             )
             return data_transformation.initiate_data_transformation()
         except Exception as e:
-            raise backorderException(e, sys)
+            raise BackorderException(e, exc_info())
 
     def start_model_trainer(
         self, data_transformation_artifact: DataTransformationArtifact
@@ -112,7 +107,7 @@ class Pipeline(Thread):
             )
             return model_trainer.initiate_model_trainer()
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def start_model_evaluation(
         self,
@@ -129,7 +124,7 @@ class Pipeline(Thread):
             )
             return model_eval.initiate_model_evaluation()
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def start_model_pusher(
         self, model_eval_artifact: ModelEvaluationArtifact
@@ -141,14 +136,13 @@ class Pipeline(Thread):
             )
             return model_pusher.initiate_model_pusher()
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
-    def run_pipeline(self):  # combine all above functions together
+    def run_pipeline(self):
         try:
             if Pipeline.experiment.running_status:
                 logging.info("Pipeline is already running")
                 return Pipeline.experiment
-            # data ingestion
             logging.info("Pipeline starting.")
 
             experiment_id = str(uuid.uuid4())
@@ -214,9 +208,9 @@ class Pipeline(Thread):
             logging.info(f"Pipeline experiment: {Pipeline.experiment}")
             self.save_experiment()
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
-    def run(self):  # we can directly run without thread
+    def run(self):
         try:
             self.run_pipeline()
         except Exception as e:
@@ -252,7 +246,7 @@ class Pipeline(Thread):
             else:
                 print("First start experiment")
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     @classmethod
     def get_experiments_status(cls, limit: int = 5) -> pd.DataFrame:
@@ -266,4 +260,4 @@ class Pipeline(Thread):
             else:
                 return pd.DataFrame()
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e

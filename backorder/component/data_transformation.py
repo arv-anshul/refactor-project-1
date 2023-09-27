@@ -1,5 +1,5 @@
 import os
-import sys
+from sys import exc_info
 
 import numpy as np
 from imblearn.over_sampling import SMOTE
@@ -17,7 +17,7 @@ from backorder.entity.artifact_entity import (
     DataValidationArtifact,
 )
 from backorder.entity.config_entity import DataTransformationConfig
-from backorder.exception import backorderException
+from backorder.exception import BackorderException
 from backorder.logger import logging
 from backorder.util.util import load_data, read_yaml_file, save_numpy_array_data, save_object
 
@@ -36,7 +36,7 @@ class DataTransformation:
             self.data_validation_artifact = data_validation_artifact
 
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def get_data_transformer_object(self) -> ColumnTransformer:
         try:
@@ -70,7 +70,7 @@ class DataTransformation:
             return preprocessing
 
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def initiate_data_transformation(self) -> DataTransformationArtifact:
         try:
@@ -154,7 +154,7 @@ class DataTransformation:
             return data_transformation_artifact
 
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def __del__(self):
         logging.info(f"{'>>'*30}Data Transformation log completed.{'<<'*30} \n\n")

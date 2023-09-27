@@ -1,9 +1,9 @@
 import os
-import sys
+from sys import exc_info
 
 import pandas as pd
 
-from backorder.exception import backorderException
+from backorder.exception import BackorderException
 from backorder.util.util import load_object
 
 
@@ -58,14 +58,14 @@ class backorderData:
             self.went_on_backorder = went_on_backorder
 
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def get_backorder_input_data_frame(self):
         try:
             backorder_input_dict = self.get_backorder_data_as_dict()
             return pd.DataFrame(backorder_input_dict)
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def get_backorder_data_as_dict(self):
         try:
@@ -94,7 +94,7 @@ class backorderData:
             }
             return input_data
         except Exception as e:
-            raise backorderException(e, sys)
+            raise BackorderException(e, exc_info())
 
 
 class backorderPredictor:
@@ -102,7 +102,7 @@ class backorderPredictor:
         try:
             self.model_dir = model_dir
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def get_latest_model_path(self):
         try:
@@ -112,7 +112,7 @@ class backorderPredictor:
             latest_model_path = os.path.join(latest_model_dir, file_name)
             return latest_model_path
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def predict(self, X):
         try:
@@ -121,4 +121,4 @@ class backorderPredictor:
             went_on_backorder = model.predict(X)
             return went_on_backorder
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e

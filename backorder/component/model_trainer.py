@@ -9,7 +9,7 @@
 # return model_trainer_artifact
 
 
-import sys
+from sys import exc_info
 from typing import List
 
 from backorder.entity.artifact_entity import DataTransformationArtifact, ModelTrainerArtifact
@@ -20,7 +20,7 @@ from backorder.entity.model_factory import (
     ModelFactory,
     evaluate_classification_model,
 )
-from backorder.exception import backorderException
+from backorder.exception import BackorderException
 from backorder.logger import logging
 from backorder.util.util import load_numpy_array_data, load_object, save_object
 
@@ -62,7 +62,7 @@ class ModelTrainer:
             self.model_trainer_config = model_trainer_config
             self.data_transformation_artifact = data_transformation_artifact
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def initiate_model_trainer(self) -> ModelTrainerArtifact:
         try:
@@ -156,7 +156,7 @@ class ModelTrainer:
             logging.info(f"Model Trainer Artifact: {model_trainer_artifact}")
             return model_trainer_artifact
         except Exception as e:
-            raise backorderException(e, sys) from e
+            raise BackorderException(e, exc_info()) from e
 
     def __del__(self):
         logging.info(f"{'>>' * 30}Model trainer log completed.{'<<' * 30} ")
