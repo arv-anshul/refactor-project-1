@@ -16,3 +16,18 @@
 - [x] Refactor **exceptions**.
 - [x] Refactor **logging**.
   > I don't know what to do about it. **I didn't do anything.**
+
+## Step 2 - 1-on-1
+
+> Refactor file to file from **ingestion to model building**.
+
+- [ ] `application`
+- [ ] `backorder.constant`
+- [ ] `backorder.entity`
+- [ ] `backorder.config`
+- [ ] `backorder.component.data_ingestion`
+- [ ] `backorder.component.data_transformation`
+- [ ] `backorder.component.data_validation`
+- [ ] `backorder.component.model_trainer`
+- [ ] `backorder.component.model_pusher`
+- [ ] `backorder.component.model_evaluation`
