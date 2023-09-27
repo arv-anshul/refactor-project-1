@@ -1,28 +1,35 @@
-#working
-#in this component we are comparing model in production with best model got from trained model and select best out of them 
-#if no old model available check with base accuracy
+# working
+# in this component we are comparing model in production with best model got from trained model and select best out of them
+# if no old model available check with base accuracy
 
 
-from backorder.logger import logging
-from backorder.exception import backorderException
-from backorder.entity.config_entity import ModelEvaluationConfig
-from backorder.entity.artifact_entity import DataIngestionArtifact,DataValidationArtifact,ModelTrainerArtifact,ModelEvaluationArtifact
-from backorder.constant import *
-import numpy as np
 import os
 import sys
-from backorder.util.util import write_yaml_file, read_yaml_file, load_object,load_data
+
+import numpy as np
+
+from backorder.constant import *
+from backorder.entity.artifact_entity import (
+    DataIngestionArtifact,
+    DataValidationArtifact,
+    ModelEvaluationArtifact,
+    ModelTrainerArtifact,
+)
+from backorder.entity.config_entity import ModelEvaluationConfig
 from backorder.entity.model_factory import evaluate_classification_model
-
-
+from backorder.exception import backorderException
+from backorder.logger import logging
+from backorder.util.util import load_data, load_object, read_yaml_file, write_yaml_file
 
 
 class ModelEvaluation:
-
-    def __init__(self, model_evaluation_config: ModelEvaluationConfig,
-                 data_ingestion_artifact: DataIngestionArtifact,
-                 data_validation_artifact: DataValidationArtifact,
-                 model_trainer_artifact: ModelTrainerArtifact):
+    def __init__(
+        self,
+        model_evaluation_config: ModelEvaluationConfig,
+        data_ingestion_artifact: DataIngestionArtifact,
+        data_validation_artifact: DataValidationArtifact,
+        model_trainer_artifact: ModelTrainerArtifact,
+    ):
         try:
             logging.info(f"{'>>' * 30}Model Evaluation log started.{'<<' * 30} ")
             self.model_evaluation_config = model_evaluation_config
@@ -33,17 +40,22 @@ class ModelEvaluation:
             raise backorderException(e, sys) from e
 
     def get_best_model(self):
-        try:         
+        try:
             model = None
             model_evaluation_file_path = self.model_evaluation_config.model_evaluation_file_path
 
-            if not os.path.exists(model_evaluation_file_path): #it will run only at  the start when no model is there
-                write_yaml_file(file_path=model_evaluation_file_path,
-                                )
+            if not os.path.exists(
+                model_evaluation_file_path
+            ):  # it will run only at  the start when no model is there
+                write_yaml_file(
+                    file_path=model_evaluation_file_path,
+                )
                 return model
             model_eval_file_content = read_yaml_file(file_path=model_evaluation_file_path)
 
-            model_eval_file_content = dict() if model_eval_file_content is None else model_eval_file_content #gets empty dict if none and if avilable directly pass that file
+            model_eval_file_content = (
+                dict() if model_eval_file_content is None else model_eval_file_content
+            )  # gets empty dict if none and if avilable directly pass that file
 
             if BEST_MODEL_KEY not in model_eval_file_content:
                 return model
@@ -53,13 +65,14 @@ class ModelEvaluation:
         except Exception as e:
             raise backorderException(e, sys) from e
 
-    def update_evaluation_report(self, model_evaluation_artifact: ModelEvaluationArtifact):#function update/replace model when model acc > base model(model in production)
+    def update_evaluation_report(
+        self, model_evaluation_artifact: ModelEvaluationArtifact
+    ):  # function update/replace model when model acc > base model(model in production)
         try:
             eval_file_path = self.model_evaluation_config.model_evaluation_file_path
             model_eval_content = read_yaml_file(file_path=eval_file_path)
             model_eval_content = dict() if model_eval_content is None else model_eval_content
-            
-            
+
             previous_best_model = None
             if BEST_MODEL_KEY in model_eval_content:
                 previous_best_model = model_eval_content[BEST_MODEL_KEY]
@@ -70,7 +83,7 @@ class ModelEvaluation:
                     MODEL_PATH_KEY: model_evaluation_artifact.evaluated_model_path,
                 }
             }
-          # creating history of updation of model
+            # creating history of updation of model
             if previous_best_model is not None:
                 model_history = {self.model_evaluation_config.time_stamp: previous_best_model}
                 if HISTORY_KEY not in model_eval_content:
@@ -96,12 +109,14 @@ class ModelEvaluation:
 
             schema_file_path = self.data_validation_artifact.schema_file_path
 
-            train_dataframe = load_data(file_path=train_file_path,
-                                                           schema_file_path=schema_file_path,
-                                                           )
-            test_dataframe = load_data(file_path=test_file_path,
-                                                          schema_file_path=schema_file_path,
-                                                          )
+            train_dataframe = load_data(
+                file_path=train_file_path,
+                schema_file_path=schema_file_path,
+            )
+            test_dataframe = load_data(
+                file_path=test_file_path,
+                schema_file_path=schema_file_path,
+            )
             schema_content = read_yaml_file(file_path=schema_file_path)
             target_column_name = schema_content[TARGET_COLUMN_KEY]
 
@@ -121,40 +136,54 @@ class ModelEvaluation:
 
             if model is None:
                 logging.info("Not found any existing model. Hence accepting trained model")
-                model_evaluation_artifact = ModelEvaluationArtifact(evaluated_model_path=trained_model_file_path,
-                                                                    is_model_accepted=True)
+                model_evaluation_artifact = ModelEvaluationArtifact(
+                    evaluated_model_path=trained_model_file_path, is_model_accepted=True
+                )
                 self.update_evaluation_report(model_evaluation_artifact)
-                logging.info(f"Model accepted. Model eval artifact {model_evaluation_artifact} created")
+                logging.info(
+                    f"Model accepted. Model eval artifact {model_evaluation_artifact} created"
+                )
                 return model_evaluation_artifact
 
-            model_list = [model, trained_model_object] #old model and newly trained model
+            model_list = [model, trained_model_object]  # old model and newly trained model
 
-            metric_info_artifact = evaluate_classification_model(model_list=model_list,
-                                                               X_train=train_dataframe,
-                                                               y_train=train_target_arr,
-                                                               X_test=test_dataframe,
-                                                               y_test=test_target_arr,
-                                                               base_accuracy=self.model_trainer_artifact.model_accuracy,
-                                                               )
-            logging.info(f"Model evaluation completed. model metric artifact: {metric_info_artifact}")
+            metric_info_artifact = evaluate_classification_model(
+                model_list=model_list,
+                X_train=train_dataframe,
+                y_train=train_target_arr,
+                X_test=test_dataframe,
+                y_test=test_target_arr,
+                base_accuracy=self.model_trainer_artifact.model_accuracy,
+            )
+            logging.info(
+                f"Model evaluation completed. model metric artifact: {metric_info_artifact}"
+            )
 
-            if metric_info_artifact is None: #if both model doesnt achieve base accuracy then
-                response = ModelEvaluationArtifact(is_model_accepted=False,
-                                                   evaluated_model_path=trained_model_file_path
-                                                   )
+            if metric_info_artifact is None:  # if both model doesnt achieve base accuracy then
+                response = ModelEvaluationArtifact(
+                    is_model_accepted=False, evaluated_model_path=trained_model_file_path
+                )
                 logging.info(response)
                 return response
 
-            if metric_info_artifact.index_number == 1: #if model at index 1i.e trained model >base acc then
-                model_evaluation_artifact = ModelEvaluationArtifact(evaluated_model_path=trained_model_file_path,
-                                                                    is_model_accepted=True)
+            if (
+                metric_info_artifact.index_number == 1
+            ):  # if model at index 1i.e trained model >base acc then
+                model_evaluation_artifact = ModelEvaluationArtifact(
+                    evaluated_model_path=trained_model_file_path, is_model_accepted=True
+                )
                 self.update_evaluation_report(model_evaluation_artifact)
-                logging.info(f"Model accepted. Model eval artifact {model_evaluation_artifact} created")
+                logging.info(
+                    f"Model accepted. Model eval artifact {model_evaluation_artifact} created"
+                )
 
-            else: #if trained model is < base acc no need to update
-                logging.info("Trained model is no better than existing model hence not accepting trained model")
-                model_evaluation_artifact = ModelEvaluationArtifact(evaluated_model_path=trained_model_file_path,
-                                                                    is_model_accepted=False)
+            else:  # if trained model is < base acc no need to update
+                logging.info(
+                    "Trained model is no better than existing model hence not accepting trained model"
+                )
+                model_evaluation_artifact = ModelEvaluationArtifact(
+                    evaluated_model_path=trained_model_file_path, is_model_accepted=False
+                )
             return model_evaluation_artifact
         except Exception as e:
             raise backorderException(e, sys) from e

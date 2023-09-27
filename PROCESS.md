@@ -9,7 +9,7 @@
 
 - [x] First run the app.
 - [x] Remove unnecessary files.
-- [ ] Format the scripts.
+- [x] Format the scripts.
 
 ### Step 1.1 - Exception and Logging
 

@@ -1,16 +1,19 @@
-from backorder.logger import logging
-from backorder.exception import backorderException
-from backorder.entity.artifact_entity import ModelPusherArtifact, ModelEvaluationArtifact 
-from backorder.entity.config_entity import ModelPusherConfig
-import os, sys
+import os
 import shutil
+import sys
+
+from backorder.entity.artifact_entity import ModelEvaluationArtifact, ModelPusherArtifact
+from backorder.entity.config_entity import ModelPusherConfig
+from backorder.exception import backorderException
+from backorder.logger import logging
 
 
 class ModelPusher:
-
-    def __init__(self, model_pusher_config: ModelPusherConfig,
-                 model_evaluation_artifact: ModelEvaluationArtifact
-                 ):
+    def __init__(
+        self,
+        model_pusher_config: ModelPusherConfig,
+        model_evaluation_artifact: ModelEvaluationArtifact,
+    ):
         try:
             logging.info(f"{'>>' * 30}Model Pusher log started.{'<<' * 30} ")
             self.model_pusher_config = model_pusher_config
@@ -28,17 +31,20 @@ class ModelPusher:
             logging.info(f"Exporting model file: [{export_model_file_path}]")
             os.makedirs(export_dir, exist_ok=True)
 
-            shutil.copy(src=evaluated_model_file_path, dst=export_model_file_path)#here we are saving model locally i.e in saved model folder(automatically generated after run )
-            #we can create a function in util to save model to Azure blob storage/ google cloud strorage / s3 bucket
-            #we have to create 2 function one load model from s3/blob and save to s3/..
-            #boto 3library for this
-            
-            logging.info(
-                f"Trained model: {evaluated_model_file_path} is copied in export dir:[{export_model_file_path}]")
+            shutil.copy(
+                src=evaluated_model_file_path, dst=export_model_file_path
+            )  # here we are saving model locally i.e in saved model folder(automatically generated after run )
+            # we can create a function in util to save model to Azure blob storage/ google cloud strorage / s3 bucket
+            # we have to create 2 function one load model from s3/blob and save to s3/..
+            # boto 3library for this
 
-            model_pusher_artifact = ModelPusherArtifact(is_model_pusher=True,
-                                                        export_model_file_path=export_model_file_path
-                                                        )
+            logging.info(
+                f"Trained model: {evaluated_model_file_path} is copied in export dir:[{export_model_file_path}]"
+            )
+
+            model_pusher_artifact = ModelPusherArtifact(
+                is_model_pusher=True, export_model_file_path=export_model_file_path
+            )
             logging.info(f"Model pusher artifact: [{model_pusher_artifact}]")
             return model_pusher_artifact
         except Exception as e:

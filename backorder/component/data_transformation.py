@@ -1,30 +1,34 @@
-from sklearn import preprocessing
-from backorder.exception import backorderException
-from backorder.logger import logging
-from backorder.entity.config_entity import DataTransformationConfig
-from backorder.entity.artifact_entity import DataIngestionArtifact, DataValidationArtifact, DataTransformationArtifact
-import sys, os
+import os
+import sys
+
 import numpy as np
-from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.pipeline import Pipeline
+from imblearn.over_sampling import SMOTE
+from imblearn.pipeline import Pipeline as ImblearnPipeline
+from imblearn.under_sampling import RandomUnderSampler
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
-import pandas as pd
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+
 from backorder.constant import *
-from backorder.util.util import read_yaml_file, save_object, save_numpy_array_data, load_data
-
-from imblearn.over_sampling import SMOTE
-from imblearn.under_sampling import RandomUnderSampler
-from imblearn.pipeline import Pipeline as ImblearnPipeline
-
+from backorder.entity.artifact_entity import (
+    DataIngestionArtifact,
+    DataTransformationArtifact,
+    DataValidationArtifact,
+)
+from backorder.entity.config_entity import DataTransformationConfig
+from backorder.exception import backorderException
+from backorder.logger import logging
+from backorder.util.util import load_data, read_yaml_file, save_numpy_array_data, save_object
 
 
 class DataTransformation:
-
-    def __init__(self, data_transformation_config: DataTransformationConfig,
-                 data_ingestion_artifact: DataIngestionArtifact,
-                 data_validation_artifact: DataValidationArtifact):
+    def __init__(
+        self,
+        data_transformation_config: DataTransformationConfig,
+        data_ingestion_artifact: DataIngestionArtifact,
+        data_validation_artifact: DataValidationArtifact,
+    ):
         try:
             logging.info(f"{'>>' * 30}Data Transformation log started.{'<<' * 30} ")
             self.data_transformation_config = data_transformation_config
@@ -42,24 +46,27 @@ class DataTransformation:
             numerical_columns = dataset_schema[NUMERICAL_COLUMN_KEY]
             categorical_columns = dataset_schema[CATEGORICAL_COLUMN_KEY]
 
-            num_pipeline = Pipeline(steps=[
-                ('imputer', SimpleImputer(strategy="median")),
-                ('scaler', StandardScaler())
-            ])
+            num_pipeline = Pipeline(
+                steps=[("imputer", SimpleImputer(strategy="median")), ("scaler", StandardScaler())]
+            )
 
-            cat_pipeline = Pipeline(steps=[
-                ('impute', SimpleImputer(strategy="most_frequent")),
-                ('one_hot_encoder', OneHotEncoder(sparse_output=False)),
-                ('scaler', StandardScaler()),
-            ])
+            cat_pipeline = Pipeline(
+                steps=[
+                    ("impute", SimpleImputer(strategy="most_frequent")),
+                    ("one_hot_encoder", OneHotEncoder(sparse_output=False)),
+                    ("scaler", StandardScaler()),
+                ]
+            )
 
             logging.info(f"Categorical columns: {categorical_columns}")
             logging.info(f"Numerical columns: {numerical_columns}")
 
-            preprocessing = ColumnTransformer([
-                ('num_pipeline', num_pipeline, numerical_columns),
-                ('cat_pipeline', cat_pipeline, categorical_columns),
-            ])
+            preprocessing = ColumnTransformer(
+                [
+                    ("num_pipeline", num_pipeline, numerical_columns),
+                    ("cat_pipeline", cat_pipeline, categorical_columns),
+                ]
+            )
             return preprocessing
 
         except Exception as e:
@@ -90,18 +97,26 @@ class DataTransformation:
             input_feature_test_df = test_df.drop(target_column_name, axis=1)
             target_feature_test_df = test_df[target_column_name]
 
-            logging.info(f"Applying preprocessing object on training dataframe and testing dataframe")
-            input_feature_train_arr = preprocessing_obj.fit_transform(input_feature_train_df) #column transformation not applied to target of both test and train dataset
+            logging.info(
+                f"Applying preprocessing object on training dataframe and testing dataframe"
+            )
+            input_feature_train_arr = preprocessing_obj.fit_transform(
+                input_feature_train_df
+            )  # column transformation not applied to target of both test and train dataset
             input_feature_test_arr = preprocessing_obj.transform(input_feature_test_df)
 
             # Using imblearn to balance the dataset
             over = SMOTE(sampling_strategy=0.8)
             under = RandomUnderSampler(sampling_strategy=0.8)
-            steps = [('o', over), ('u', under)]
+            steps = [("o", over), ("u", under)]
             pipeline = ImblearnPipeline(steps=steps)
-            X_train_resampled, y_train_resampled = pipeline.fit_resample(input_feature_train_arr, target_feature_train_df)
+            X_train_resampled, y_train_resampled = pipeline.fit_resample(
+                input_feature_train_arr, target_feature_train_df
+            )
 
-            X_test_resampled, y_test_resampled = pipeline.fit_resample(input_feature_test_arr, target_feature_test_df)
+            X_test_resampled, y_test_resampled = pipeline.fit_resample(
+                input_feature_test_arr, target_feature_test_df
+            )
 
             # Concatenate input features and target features
             train_arr = np.c_[X_train_resampled, np.array(y_train_resampled)]
@@ -120,16 +135,20 @@ class DataTransformation:
             save_numpy_array_data(file_path=transformed_train_file_path, array=train_arr)
             save_numpy_array_data(file_path=transformed_test_file_path, array=test_arr)
 
-            preprocessing_obj_file_path = self.data_transformation_config.preprocessed_object_file_path
+            preprocessing_obj_file_path = (
+                self.data_transformation_config.preprocessed_object_file_path
+            )
 
             logging.info(f"Saving preprocessing object.")
             save_object(file_path=preprocessing_obj_file_path, obj=preprocessing_obj)
 
-            data_transformation_artifact = DataTransformationArtifact(is_transformed=True,
-                                                                      message="Data transformation successful.",
-                                                                      transformed_train_file_path=transformed_train_file_path,
-                                                                      transformed_test_file_path=transformed_test_file_path,
-                                                                      preprocessed_object_file_path=preprocessing_obj_file_path)
+            data_transformation_artifact = DataTransformationArtifact(
+                is_transformed=True,
+                message="Data transformation successful.",
+                transformed_train_file_path=transformed_train_file_path,
+                transformed_test_file_path=transformed_test_file_path,
+                preprocessed_object_file_path=preprocessing_obj_file_path,
+            )
 
             logging.info(f"Data transformation artifact: {data_transformation_artifact}")
             return data_transformation_artifact
