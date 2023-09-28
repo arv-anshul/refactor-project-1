@@ -1,12 +1,14 @@
 import os
 import uuid
-from collections import namedtuple
 from datetime import datetime
+from pathlib import Path
 from sys import exc_info
 from threading import Thread
+from typing import NamedTuple
 
 import pandas as pd
 
+from backorder import constant as C
 from backorder.component.data_ingestion import DataIngestion
 from backorder.component.data_transformation import DataTransformation
 from backorder.component.data_validation import DataValidation
@@ -14,7 +16,6 @@ from backorder.component.model_evaluation import ModelEvaluation
 from backorder.component.model_pusher import ModelPusher
 from backorder.component.model_trainer import ModelTrainer
 from backorder.config.configuration import Configuartion
-from backorder.constant import EXPERIMENT_DIR_NAME, EXPERIMENT_FILE_NAME
 from backorder.entity.artifact_entity import (
     DataIngestionArtifact,
     DataTransformationArtifact,
@@ -26,36 +27,34 @@ from backorder.entity.artifact_entity import (
 from backorder.exception import BackorderException
 from backorder.logger import logging
 
-Experiment = namedtuple(
-    "Experiment",
-    [
-        "experiment_id",
-        "initialization_timestamp",
-        "artifact_time_stamp",
-        "running_status",
-        "start_time",
-        "stop_time",
-        "execution_time",
-        "message",
-        "experiment_file_path",
-        "accuracy",
-        "is_model_accepted",
-    ],
-)
+
+class Experiment(NamedTuple):
+    experiment_id: uuid.UUID
+    initialization_timestamp: str
+    artifact_time_stamp: str
+    running_status: bool
+    start_time: datetime | None
+    stop_time: datetime | None
+    execution_time: datetime | None
+    message: str
+    experiment_file_path: Path
+    accuracy: float
+    is_model_accepted: bool
 
 
 class Pipeline(Thread):
-    experiment: Experiment = Experiment(*([None] * 11))
-    experiment_file_path = None
+    experiment: Experiment
+    experiment_file_path: Path
 
     def __init__(self, config: Configuartion) -> None:
         try:
-            os.makedirs(config.training_pipeline_config.artifact_dir, exist_ok=True)
-            Pipeline.experiment_file_path = os.path.join(
-                config.training_pipeline_config.artifact_dir,
-                EXPERIMENT_DIR_NAME,
-                EXPERIMENT_FILE_NAME,
+            config.training_pipeline_config.artifact_dir.mkdir(exist_ok=True)
+            Pipeline.experiment_file_path = (
+                config.training_pipeline_config.artifact_dir
+                / C.EXPERIMENT_DIR_NAME
+                / C.EXPERIMENT_FILE_NAME
             )
+
             super().__init__(daemon=False, name="pipeline")
             self.config = config
         except Exception as e:
@@ -145,7 +144,7 @@ class Pipeline(Thread):
                 return Pipeline.experiment
             logging.info("Pipeline starting.")
 
-            experiment_id = str(uuid.uuid4())
+            experiment_id = uuid.uuid4()
 
             Pipeline.experiment = Experiment(
                 experiment_id=experiment_id,
@@ -156,15 +155,15 @@ class Pipeline(Thread):
                 stop_time=None,
                 execution_time=None,
                 experiment_file_path=Pipeline.experiment_file_path,
-                is_model_accepted=None,
+                is_model_accepted=False,
                 message="Pipeline has been started.",
-                accuracy=None,
+                accuracy=-1,
             )
             logging.info(f"Pipeline experiment: {Pipeline.experiment}")
 
             self.save_experiment()
 
-            data_ingestion_artifact = self.start_data_ingestion()  # function mentioned above
+            data_ingestion_artifact = self.start_data_ingestion()
             data_validation_artifact = self.start_data_validation(
                 data_ingestion_artifact=data_ingestion_artifact
             )
@@ -199,7 +198,7 @@ class Pipeline(Thread):
                 running_status=False,
                 start_time=Pipeline.experiment.start_time,
                 stop_time=stop_time,
-                execution_time=stop_time - Pipeline.experiment.start_time,
+                execution_time=stop_time - Pipeline.experiment.start_time,  # type: ignore
                 message="Pipeline has been completed.",
                 experiment_file_path=Pipeline.experiment_file_path,
                 is_model_accepted=model_evaluation_artifact.is_model_accepted,

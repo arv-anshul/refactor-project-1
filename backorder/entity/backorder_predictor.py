@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 from sys import exc_info
 from typing import Optional
 
@@ -68,23 +68,23 @@ class BackorderData:
 
 
 class BackorderPredictor:
-    def __init__(self, model_dir: str):
+    def __init__(self, model_dir: Path):
         self.model_dir = model_dir
 
-    def get_latest_model_path(self) -> Optional[str]:
-        model_folders = os.listdir(self.model_dir)
+    def get_latest_model_path(self) -> Optional[Path]:
+        model_folders = list(self.model_dir.iterdir())
         if not model_folders:
             return None
 
-        latest_model_folder = max(model_folders, key=int)
-        latest_model_dir = os.path.join(self.model_dir, latest_model_folder)
+        latest_model_folder = max(map(str, model_folders))
+        latest_model_dir = self.model_dir / f"{latest_model_folder}"
 
-        model_files = os.listdir(latest_model_dir)
+        model_files = list(latest_model_dir.iterdir())
         if not model_files:
             return None
 
         latest_model_file = model_files[0]
-        latest_model_path = os.path.join(latest_model_dir, latest_model_file)
+        latest_model_path = latest_model_dir / latest_model_file
         return latest_model_path
 
     def predict(self, X):
