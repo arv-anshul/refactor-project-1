@@ -1,45 +1,45 @@
-from collections import namedtuple
-
-DataIngestionArtifact = namedtuple(
-    "DataIngestionArtifact", ["train_file_path", "test_file_path", "is_ingested", "message"]
-)
+from typing import NamedTuple
 
 
-DataValidationArtifact = namedtuple(
-    "DataValidationArtifact",
-    ["schema_file_path", "report_file_path", "report_page_file_path", "is_validated", "message"],
-)
+class DataIngestionArtifact(NamedTuple):
+    train_file_path: str
+    test_file_path: str
+    is_ingested: bool
+    message: str
 
 
-DataTransformationArtifact = namedtuple(
-    "DataTransformationArtifact",
-    [
-        "is_transformed",
-        "message",
-        "transformed_train_file_path",
-        "transformed_test_file_path",
-        "preprocessed_object_file_path",
-    ],
-)
+class DataValidationArtifact(NamedTuple):
+    schema_file_path: str
+    report_file_path: str
+    report_page_file_path: str
+    is_validated: bool
+    message: str
 
-ModelTrainerArtifact = namedtuple(
-    "ModelTrainerArtifact",
-    [
-        "is_trained",
-        "message",
-        "trained_model_file_path",
-        "test_f1_score",
-        "train_f1_score",
-        "train_accuracy",
-        "test_accuracy",
-        "model_accuracy",
-    ],
-)
 
-ModelEvaluationArtifact = namedtuple(
-    "ModelEvaluationArtifact", ["is_model_accepted", "evaluated_model_path"]
-)
+class DataTransformationArtifact(NamedTuple):
+    is_transformed: bool
+    message: str
+    transformed_train_file_path: str
+    transformed_test_file_path: str
+    preprocessed_object_file_path: str
 
-ModelPusherArtifact = namedtuple(
-    "ModelPusherArtifact", ["is_model_pusher", "export_model_file_path"]
-)
+
+class ModelTrainerArtifact(NamedTuple):
+    is_trained: bool
+    message: str
+    trained_model_file_path: str
+    test_f1_score: float
+    train_f1_score: float
+    train_accuracy: float
+    test_accuracy: float
+    model_accuracy: float
+
+
+class ModelEvaluationArtifact(NamedTuple):
+    is_model_accepted: bool
+    evaluated_model_path: str
+
+
+class ModelPusherArtifact(NamedTuple):
+    is_model_pusher: bool
+    export_model_file_path: str

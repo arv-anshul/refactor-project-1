@@ -1,38 +1,40 @@
-from collections import namedtuple
-
-# we are using named tuple so that it will be in suggestions
-DataIngestionConfig = namedtuple(
-    "DataIngestionConfig",
-    [
-        "dataset_download_url",
-        "tgz_download_dir",
-        "raw_data_dir",
-        "ingested_train_dir",
-        "ingested_test_dir",
-    ],
-)
-
-DataValidationConfig = namedtuple(
-    "DataValidationConfig", ["schema_file_path", "report_file_path", "report_page_file_path"]
-)
-
-DataTransformationConfig = namedtuple(
-    "DataTransformationConfig",
-    ["transformed_train_dir", "transformed_test_dir", "preprocessed_object_file_path"],
-)  # pickle object of feature engineering here i.e in preprcessed file path
+from typing import NamedTuple
 
 
-ModelTrainerConfig = namedtuple(
-    "ModelTrainerConfig", ["trained_model_file_path", "base_accuracy", "model_config_file_path"]
-)  # pickle file for best model performed with some datum accuracy(base accuracy)>
+class DataIngestionConfig(NamedTuple):
+    dataset_download_url: str
+    tgz_download_dir: str
+    raw_data_dir: str
+    ingested_train_dir: str
+    ingested_test_dir: str
 
-ModelEvaluationConfig = namedtuple(
-    "ModelEvaluationConfig", ["model_evaluation_file_path", "time_stamp"]
-)  # all model in production
+
+class DataValidationConfig(NamedTuple):
+    schema_file_path: str
+    report_file_path: str
+    report_page_file_path: str
 
 
-ModelPusherConfig = namedtuple(
-    "ModelPusherConfig", ["export_dir_path"]
-)  # if your trained model is better than model in production that should be stored in same folder of production
+class DataTransformationConfig(NamedTuple):
+    transformed_train_dir: str
+    transformed_test_dir: str
+    preprocessed_object_file_path: str
 
-TrainingPipelineConfig = namedtuple("TrainingPipelineConfig", ["artifact_dir"])
+
+class ModelTrainerConfig(NamedTuple):
+    trained_model_file_path: str
+    base_accuracy: float
+    model_config_file_path: str
+
+
+class ModelEvaluationConfig(NamedTuple):
+    model_evaluation_file_path: str
+    time_stamp: str
+
+
+class ModelPusherConfig(NamedTuple):
+    export_dir_path: str
+
+
+class TrainingPipelineConfig(NamedTuple):
+    artifact_dir: str

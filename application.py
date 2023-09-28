@@ -5,7 +5,7 @@ from flask import Flask, abort, render_template, request, send_file
 
 from backorder.config.configuration import Configuartion
 from backorder.constant import CONFIG_DIR, get_current_time_stamp
-from backorder.entity.backorder_predictor import backorderData, backorderPredictor
+from backorder.entity.backorder_predictor import BackorderData, BackorderPredictor
 from backorder.logger import get_log_dataframe
 from backorder.pipeline.pipeline import Pipeline
 from backorder.util.util import read_yaml_file, write_yaml_file
@@ -113,7 +113,7 @@ def predict():
         stop_auto_buy = request.form["stop_auto_buy"]
         rev_stop = request.form["rev_stop"]
 
-        backorder_data = backorderData(
+        backorder_data = BackorderData(
             national_inv=national_inv,
             lead_time=lead_time,
             in_transit_qty=in_transit_qty,
@@ -137,7 +137,7 @@ def predict():
             rev_stop=rev_stop,
         )
         backorder_df = backorder_data.get_backorder_input_data_frame()
-        backorder = backorderPredictor(model_dir=MODEL_DIR)
+        backorder = BackorderPredictor(model_dir=MODEL_DIR)
         went_on_backorder = backorder.predict(X=backorder_df)
         context = {
             BACKORDER_DATA_KEY: backorder_data.get_backorder_data_as_dict(),
@@ -184,7 +184,7 @@ def update_model_config():
 
 
 @app.route("/logs", defaults={"req_path": f"{LOG_FOLDER_NAME}"})
-@app.route("/{LOG_FOLDER_NAME}/<path:req_path>")
+@app.route(f"/{LOG_FOLDER_NAME}/<path:req_path>")
 def render_log_dir(req_path):
     os.makedirs(LOG_FOLDER_NAME, exist_ok=True)
     abs_path = os.path.join(req_path)

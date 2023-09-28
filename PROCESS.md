@@ -3,6 +3,11 @@
 ### Important to Note
 
 1. Run the `application.py` after performing any type modification because it works like application testing.
+
+```sh
+$ http://localhost:5000/
+```
+
 2. Do one at once because if you don't it mess things up to keep records of modifications.
 
 ## Step 1 - Basic
@@ -21,9 +26,9 @@
 
 > Refactor file to file from **ingestion to model building**.
 
-- [ ] `application`
-- [ ] `backorder.constant`
-- [ ] `backorder.entity`
+- [x] `application`
+- [x] `backorder.constant`
+- [x] `backorder.entity`
 - [ ] `backorder.config`
 - [ ] `backorder.component.data_ingestion`
 - [ ] `backorder.component.data_transformation`

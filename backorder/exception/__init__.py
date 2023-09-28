@@ -6,7 +6,7 @@ OptExcInfo: TypeAlias = ExcInfo | tuple[None, None, None]
 
 
 class BackorderException(Exception):
-    def __init__(self, error_message: Exception, error_detail: OptExcInfo):
+    def __init__(self, error_message: object, error_detail: OptExcInfo):
         super().__init__(error_message)
         self.error_message = BackorderException.get_detailed_error_message(
             error_message=error_message, error_detail=error_detail
