@@ -43,7 +43,7 @@ class Experiment(NamedTuple):
 
 
 class Pipeline(Thread):
-    experiment: Experiment
+    experiment: Experiment = Experiment(*([None] * 11))  # type: ignore
     experiment_file_path: Path
 
     def __init__(self, config: Configuartion) -> None:
