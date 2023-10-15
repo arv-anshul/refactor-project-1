@@ -15,7 +15,7 @@ from backorder.component.data_validation import DataValidation
 from backorder.component.model_evaluation import ModelEvaluation
 from backorder.component.model_pusher import ModelPusher
 from backorder.component.model_trainer import ModelTrainer
-from backorder.config.configuration import Configuartion
+from backorder.config.configuration import Configuration
 from backorder.entity.artifact_entity import (
     DataIngestionArtifact,
     DataTransformationArtifact,
@@ -46,7 +46,7 @@ class Pipeline(Thread):
     experiment: Experiment = Experiment(*([None] * 11))  # type: ignore
     experiment_file_path: Path
 
-    def __init__(self, config: Configuartion) -> None:
+    def __init__(self, config: Configuration) -> None:
         try:
             config.training_pipeline_config.artifact_dir.mkdir(exist_ok=True)
             Pipeline.experiment_file_path = (

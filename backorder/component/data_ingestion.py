@@ -63,8 +63,8 @@ class DataIngestion:
         )
 
         logging.info("Splitting data into train and test")
-        strat_train_set = None
-        strat_test_set = None
+        start_train_set = None
+        start_test_set = None
 
         stratified_shuffle_split = StratifiedShuffleSplit(
             n_splits=1, test_size=0.4, random_state=42
@@ -75,21 +75,21 @@ class DataIngestion:
                 backorder_data_frame["went_on_backorder"].mode()[0]
             ),
         ):
-            strat_train_set = backorder_data_frame.loc[train_index]
-            strat_test_set = backorder_data_frame.loc[test_index]
+            start_train_set = backorder_data_frame.loc[train_index]
+            start_test_set = backorder_data_frame.loc[test_index]
 
         train_file_path = self.data_ingestion_config.ingested_train_dir / file_name
         test_file_path = self.data_ingestion_config.ingested_test_dir / file_name
 
-        if strat_train_set is not None:
+        if start_train_set is not None:
             train_file_path.parent.mkdir(parents=True, exist_ok=True)
             logging.info(f"Exporting training dataset to file: {train_file_path}")
-            strat_train_set.to_csv(train_file_path, index=False)
+            start_train_set.to_csv(train_file_path, index=False)
 
-        if strat_test_set is not None:
+        if start_test_set is not None:
             test_file_path.parent.mkdir(parents=True, exist_ok=True)
             logging.info(f"Exporting test dataset to file: {test_file_path}")
-            strat_test_set.to_csv(test_file_path, index=False)
+            start_test_set.to_csv(test_file_path, index=False)
 
         data_ingestion_artifact = DataIngestionArtifact(
             train_file_path=train_file_path,

@@ -1,23 +1,24 @@
 import json
 import os
+from pathlib import Path
 
 from flask import Flask, abort, render_template, request, send_file
 
-from backorder.config.configuration import Configuartion
+from backorder.config.configuration import Configuration
 from backorder.constant import CONFIG_DIR, get_current_time_stamp
 from backorder.entity.backorder_predictor import BackorderData, BackorderPredictor
+from backorder.io import read_yaml_file, write_yaml_file
 from backorder.logger import get_log_dataframe
 from backorder.pipeline.pipeline import Pipeline
-from backorder.util.util import read_yaml_file, write_yaml_file
 
-ROOT_DIR = os.getcwd()
+ROOT_DIR = Path.cwd()
 LOG_FOLDER_NAME = "logs"
 PIPELINE_FOLDER_NAME = "backorder"
 SAVED_MODELS_DIR_NAME = "saved_models"
-MODEL_CONFIG_FILE_PATH = os.path.join(ROOT_DIR, CONFIG_DIR, "model.yaml")
-LOG_DIR = os.path.join(ROOT_DIR, LOG_FOLDER_NAME)
-PIPELINE_DIR = os.path.join(ROOT_DIR, PIPELINE_FOLDER_NAME)
-MODEL_DIR = os.path.join(ROOT_DIR, SAVED_MODELS_DIR_NAME)
+MODEL_CONFIG_FILE_PATH = ROOT_DIR / CONFIG_DIR / "model.yaml"
+LOG_DIR = ROOT_DIR / LOG_FOLDER_NAME
+PIPELINE_DIR = ROOT_DIR / PIPELINE_FOLDER_NAME
+MODEL_DIR = ROOT_DIR / SAVED_MODELS_DIR_NAME
 BACKORDER_DATA_KEY = "backorder_data"
 WENT_ON_BACK_ORDER_KEY = "went_on_backorder"
 
@@ -71,7 +72,7 @@ def view_experiment_history():
 @app.route("/train", methods=["GET", "POST"])
 def train():
     message = ""
-    pipeline = Pipeline(config=Configuartion(current_time_stamp=get_current_time_stamp()))
+    pipeline = Pipeline(config=Configuration(current_time_stamp=get_current_time_stamp()))
     if not Pipeline.experiment.running_status:
         message = "Training started."
         pipeline.start()
@@ -91,51 +92,7 @@ def predict():
     context = {BACKORDER_DATA_KEY: None, WENT_ON_BACK_ORDER_KEY: None}
 
     if request.method == "POST":
-        national_inv = float(request.form["national_inv"])
-        lead_time = float(request.form["lead_time"])
-        in_transit_qty = float(request.form["in_transit_qty"])
-        forecast_3_month = float(request.form["forecast_3_month"])
-        forecast_6_month = float(request.form["forecast_6_month"])
-        forecast_9_month = float(request.form["forecast_9_month"])
-        sales_1_month = float(request.form["sales_1_month"])
-        sales_3_month = float(request.form["sales_3_month"])
-        sales_6_month = float(request.form["sales_6_month"])
-        sales_9_month = float(request.form["sales_9_month"])
-        min_bank = float(request.form["min_bank"])
-        potential_issue = request.form["potential_issue"]
-        pieces_past_due = float(request.form["pieces_past_due"])
-        perf_6_month_avg = float(request.form["perf_6_month_avg"])
-        perf_12_month_avg = float(request.form["perf_12_month_avg"])
-        local_bo_qty = float(request.form["local_bo_qty"])
-        deck_risk = request.form["deck_risk"]
-        oe_constraint = request.form["oe_constraint"]
-        ppap_risk = request.form["ppap_risk"]
-        stop_auto_buy = request.form["stop_auto_buy"]
-        rev_stop = request.form["rev_stop"]
-
-        backorder_data = BackorderData(
-            national_inv=national_inv,
-            lead_time=lead_time,
-            in_transit_qty=in_transit_qty,
-            forecast_3_month=forecast_3_month,
-            forecast_6_month=forecast_6_month,
-            forecast_9_month=forecast_9_month,
-            sales_1_month=sales_1_month,
-            sales_3_month=sales_3_month,
-            sales_6_month=sales_6_month,
-            sales_9_month=sales_9_month,
-            min_bank=min_bank,
-            potential_issue=potential_issue,
-            pieces_past_due=pieces_past_due,
-            perf_6_month_avg=perf_6_month_avg,
-            perf_12_month_avg=perf_12_month_avg,
-            local_bo_qty=local_bo_qty,
-            deck_risk=deck_risk,
-            oe_constraint=oe_constraint,
-            ppap_risk=ppap_risk,
-            stop_auto_buy=stop_auto_buy,
-            rev_stop=rev_stop,
-        )
+        backorder_data = BackorderData(**request.form)
         backorder_df = backorder_data.get_backorder_input_data_frame()
         backorder = BackorderPredictor(model_dir=MODEL_DIR)
         went_on_backorder = backorder.predict(X=backorder_df)

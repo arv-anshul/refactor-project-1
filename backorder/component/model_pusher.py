@@ -1,10 +1,11 @@
 import os
 import shutil
-from sys import exc_info
 
-from backorder.entity.artifact_entity import ModelEvaluationArtifact, ModelPusherArtifact
+from backorder.entity.artifact_entity import (
+    ModelEvaluationArtifact,
+    ModelPusherArtifact,
+)
 from backorder.entity.config_entity import ModelPusherConfig
-from backorder.exception import BackorderException
 from backorder.logger import logging
 
 
@@ -14,47 +15,31 @@ class ModelPusher:
         model_pusher_config: ModelPusherConfig,
         model_evaluation_artifact: ModelEvaluationArtifact,
     ):
-        try:
-            logging.info(f"{'>>' * 30}Model Pusher log started.{'<<' * 30} ")
-            self.model_pusher_config = model_pusher_config
-            self.model_evaluation_artifact = model_evaluation_artifact
-
-        except Exception as e:
-            raise BackorderException(e, exc_info()) from e
+        logging.info(f"{'>>' * 30}Model Pusher log started.{'<<' * 30} ")
+        self.model_pusher_config = model_pusher_config
+        self.model_evaluation_artifact = model_evaluation_artifact
 
     def export_model(self) -> ModelPusherArtifact:
-        try:
-            evaluated_model_file_path = self.model_evaluation_artifact.evaluated_model_path
-            export_dir = self.model_pusher_config.export_dir_path
-            model_file_name = os.path.basename(evaluated_model_file_path)
-            export_model_file_path = os.path.join(export_dir, model_file_name)
-            logging.info(f"Exporting model file: [{export_model_file_path}]")
-            os.makedirs(export_dir, exist_ok=True)
+        evaluated_model_file_path = self.model_evaluation_artifact.evaluated_model_path
+        export_dir = self.model_pusher_config.export_dir_path
+        model_file_name = os.path.basename(evaluated_model_file_path)
+        export_model_file_path = os.path.join(export_dir, model_file_name)
+        logging.info(f"Exporting model file: [{export_model_file_path}]")
+        os.makedirs(export_dir, exist_ok=True)
 
-            shutil.copy(
-                src=evaluated_model_file_path, dst=export_model_file_path
-            )  # here we are saving model locally i.e in saved model folder(automatically generated after run )
-            # we can create a function in util to save model to Azure blob storage/ google cloud strorage / s3 bucket
-            # we have to create 2 function one load model from s3/blob and save to s3/..
-            # boto 3library for this
+        shutil.copy(src=evaluated_model_file_path, dst=export_model_file_path)
+        logging.info(
+            f"Trained model: {evaluated_model_file_path} is copied in export dir:[{export_model_file_path}]"
+        )
 
-            logging.info(
-                f"Trained model: {evaluated_model_file_path} is copied in export dir:[{export_model_file_path}]"
-            )
-
-            model_pusher_artifact = ModelPusherArtifact(
-                is_model_pusher=True, export_model_file_path=export_model_file_path
-            )
-            logging.info(f"Model pusher artifact: [{model_pusher_artifact}]")
-            return model_pusher_artifact
-        except Exception as e:
-            raise BackorderException(e, exc_info()) from e
+        model_pusher_artifact = ModelPusherArtifact(
+            is_model_pusher=True, export_model_file_path=export_model_file_path
+        )
+        logging.info(f"Model pusher artifact: [{model_pusher_artifact}]")
+        return model_pusher_artifact
 
     def initiate_model_pusher(self) -> ModelPusherArtifact:
-        try:
-            return self.export_model()
-        except Exception as e:
-            raise BackorderException(e, exc_info()) from e
+        return self.export_model()
 
     def __del__(self):
         logging.info(f"{'>>' * 20}Model Pusher log completed.{'<<' * 20} ")
